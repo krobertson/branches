@@ -2,8 +2,8 @@ module Branches
   class << self
     def config(&block)
       # initialize objects, if needed
-      @@users ||= []
-      @@repos ||= []
+      @@users ||= {}
+      @@repos ||= {}
       @@global ||= Global.new
       @@repository_path ||= '~'
      
@@ -12,13 +12,13 @@ module Branches
       
       # do some merging
       @@global.read = (@@global.read + @@global.write).uniq
-      @@repos.each { |r| r.read = (r.read + r.write).uniq }
+      @@repos.each { |k,v| v.read = (v.read + v.write).uniq }
 
       @@repos
     end
 
     def user(name, keyfile=nil)
-      @@users << User.new(name, keyfile)
+      @@users[name] = User.new(name, keyfile)
     end
 
     def global(&block)
@@ -29,7 +29,7 @@ module Branches
     def repo(path, &block)
       r = Repo.new(path)
       r.instance_eval(&block)
-      @@repos << r
+      @@repos[path] = r
       r
     end
 

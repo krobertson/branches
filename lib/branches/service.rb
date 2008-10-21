@@ -97,13 +97,8 @@ module Branches
         # chomp the .git
         path = path.chomp('.git')
 
-        # find the repository
-        Branches.repos.each do |r|
-          if r.path == path
-            # return whether or not they have access
-            return r.send(access).include?(user)
-          end
-        end
+        # get the repository and check its access level
+        Branches.repos[path].send(access).include?(user) if Branches.repos.has_key?(path)
 
         # record doesn't exist, no access
         false
