@@ -7,5 +7,5 @@ Spec::Rake::SpecTask.new("spec") do |t|
   t.spec_files = Dir["spec/*_spec.rb"].sort
   t.rcov = true
   t.rcov_opts << '--sort' << 'coverage' << '--sort-reverse'
-  t.rcov_opts << '--only-uncovered'
+  t.rcov_opts << '--exclude' << "spec"
 end

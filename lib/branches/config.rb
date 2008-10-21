@@ -2,11 +2,8 @@ module Branches
   class << self
     def config(&block)
       # initialize objects, if needed
-      @@users ||= {}
-      @@repos ||= {}
-      @@global ||= Global.new
-      @@repository_path ||= '~'
-     
+      reset
+
       # process the block
       class_eval(&block)
       
@@ -15,6 +12,13 @@ module Branches
       @@repos.each { |k,v| v.read = (v.read + v.write).uniq }
 
       @@repos
+    end
+
+    def reset
+      @@users = {}
+      @@repos = {}
+      @@global = Global.new
+      @@repository_path = '~'
     end
 
     def user(name, keyfile=nil)
@@ -29,7 +33,7 @@ module Branches
     def repo(path, &block)
       r = Repo.new(path)
       r.instance_eval(&block)
-      @@repos[path] = r
+      @@repos[r.path] = r
       r
     end
 
@@ -41,12 +45,9 @@ module Branches
       @@users
     end
 
-    def repository_path
+    def repository_path(value=nil)
+      @@repository_path = value if value
       @@repository_path
-    end
-
-    def repository_path=(value)
-      @@repository_path = value
     end
   end
 end

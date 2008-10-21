@@ -23,4 +23,8 @@
 #++
 
 require 'lib/branches'
-Branches::Service.run
+begin
+  Branches::Service.run
+rescue => e
+  STDERR.puts e
+end

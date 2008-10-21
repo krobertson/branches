@@ -14,51 +14,52 @@ module Branches
           ]
 
       def run
-        begin
-          # get the user
-          user = ARGV[0]
-          raise 'Mussing argument: USER' unless user
+        # get the user
+        user = ARGV[0]
+        raise 'Missing argument: USER' unless user
 
-          # get the ssh command
-          command = ENV['SSH_ORIGINAL_COMMAND']
-          raise 'Missing SSH_ORIGINAL_COMMAND environment variable' unless command
+        # get the ssh command
+        command = ENV['SSH_ORIGINAL_COMMAND']
+        raise 'Missing SSH_ORIGINAL_COMMAND environment variable' unless command
 
-          # move to the home directory
-          Dir.chdir('~')
+        # move to the home directory
+        Dir.chdir(File.expand_path('~')) do
+          # set the umask
           File.umask(0022)
 
+          # load the configuration file
+          load 'branches.config'
+
           # move to processing
-          process(user, command)
-        rescue => e
-          STDERR.puts e
+          args = process(user, command)
+          
+          # run it!
+          system(args)
         end
       end
 
       def process(user, command)
-        # load the configuration file
-        load 'branches.config'
-
         # move to the repository path
-        Dir.chdir(File.expand_path(Branches.repository_path))
+        Dir.chdir(File.expand_path(Branches.repository_path)) do
+          # get the command
+          command, path = get_command(command)
 
-        # get the command
-        command, path = get_command(command)
+          # add .git suffix if not found
+          path += '.git' if path !~ /\.git$/
 
-        # add .git suffix if not found
-        path += '.git' if path !~ /\.git$/
+          # determine access type
+          access = :read if COMMANDS_READ.include?(command)
+          access = :write if COMMANDS_WRITE.include?(command)
 
-        # determine access type
-        access = :read if COMMANDS_READ.include?(command)
-        access = :write if COMMANDS_WRITE.include?(command)
+          # check permissions
+          raise 'Permission denied to the request repository' unless check_access(path, user, access)
 
-        # check permissions
-        raise 'Permission denied to the request repository' unless check_access(path, user, access)
+          # enure it exists
+          init_repository(path) unless File.directory?(path)
 
-        # enure it exists
-        init_repository(path) unless File.directory?(path)
-
-        # execute command
-        system('git', 'shell', '-c', "#{command} '#{path}'")
+          # execute command
+          ['git', 'shell', '-c', "#{command} '#{path}'"]
+        end
       end
 
       def init_repository(path)
@@ -98,7 +99,7 @@ module Branches
         path = path.chomp('.git')
 
         # get the repository and check its access level
-        Branches.repos[path].send(access).include?(user) if Branches.repos.has_key?(path)
+        return Branches.repos[path].send(access).include?(user) if Branches.repos.has_key?(path)
 
         # record doesn't exist, no access
         false
