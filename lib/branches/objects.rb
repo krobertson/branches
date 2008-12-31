@@ -1,6 +1,6 @@
 module Branches
   class Global
-    attr_accessor :read, :write, :hooks
+    attr_accessor :read, :write
     
     def initialize
       @read = []

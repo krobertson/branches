@@ -16,7 +16,6 @@ describe 'Branches.config' do
       repo 'branches' do |r|
         r.read = 'john'
         r.write = 'jane'
-        r.hooks = 'rake sometask'
       end
     end
   
