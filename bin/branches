@@ -26,14 +26,49 @@ require 'rubygems'
 require 'trollop'
 require 'branches'
 
-begin
+SUB_COMMANDS = %w(serve setup generate_authorized_keys)
+global_opts = Trollop::options do
+  banner "Branches"
+  stop_on SUB_COMMANDS
+end
+
+# get the subcommand
+cmd = ARGV.shift
+
+case cmd
+# the main serve command
+when 'serve'
   opts = Trollop::options do
     version "branches"
-    opt :config, "The config path", :default => File.expand_path('~/branches-admin/config.rb')
+    opt :config, "The path to the Branches configuration file", :default => File.expand_path('~/branches-admin/config.rb')
+    opt :noconfig, "Don't load the configuration file, for use when overriding internal functionality"
     opt :user, "The current user", :type => String, :required => true
   end
+  begin
+    Branches::Service.run(opts)
+  rescue => e
+    STDERR.puts e
+  end
 
-  Branches::Service.run(opts)
-rescue => e
-  STDERR.puts e
+# setup command
+when 'setup'
+  opts = Trollop::options do
+    opt :home, "The home path for repositories", :default => File.expand_path('~')
+    opt :reponame, "The name of the configuration repository", :default => 'branches-admin'
+    opt :key, "The admin user's public key", :type => String, :required => true
+  end
+  require 'branches_setup'
+  Branches::Setup.setup_config_repo(File.join(opts[:home], opts[:reponame]), opts[:key])
+
+# generate_authorized_keys command
+when 'generate_authorized_keys'
+  opts = Trollop::options do
+    opt :home, "The user's home path", :default => File.expand_path('~')
+    opt :config, "The path to the Branches configuration file", :default => File.expand_path('~/branches-admin/config.rb')
+  end
+  require 'branches_setup'
+  Branches::Setup.generate_authorized_keys(opts[:home], opts[:config])
+
+else
+  Trollop::die "Unknown subcommand: #{cmd}"
 end

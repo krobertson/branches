@@ -29,8 +29,7 @@ EOS
 
       def generate_authorized_keys(home_path, config_path)
         # load the configuration
-        puts "config: #{File.join(config_path, 'config.rb')}"
-        load File.join(config_path, 'config.rb')
+        load config_path
 
         # create the file
         FileUtils.mkdir(File.join(home_path, '.ssh')) unless File.exist?(File.join(home_path, '.ssh'))
@@ -39,9 +38,9 @@ EOS
 
           # loop the keys
           puts "keydir: #{Branches.keydir}"
-          Dir.glob(File.join(config_path, Branches.keydir, '*')) do |k|
+          Dir.glob(File.join(File.dirname(config_path), Branches.keydir, '*')) do |k|
             puts "key: #{k}"
-            f.write "command=\"branches --config=#{File.join(config_path, 'config.rb')} --user=#{File.basename(k)}\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty #{File.read(k).chomp}\n"
+            f.write "command=\"branches --config=#{File.expand_path(config_path)} --user=#{File.basename(k)}\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty #{File.read(k).chomp}\n"
           end
         end
       end

@@ -12,7 +12,7 @@ spec = Gem::Specification.new do |s|
   s.summary      = 'Simplified, secure, private git repository serving'
   s.bindir       = 'bin'
   s.description  = 'Simplified, secure, private git repository serving'
-  s.executables  = %w( branches branches-setup )
+  s.executables  = %w( branches )
   s.require_path = 'lib'
   s.files        = %w( MIT-LICENSE README.textile Rakefile ) + Dir["{bin,lib}/**/*"]
 

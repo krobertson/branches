@@ -53,7 +53,7 @@ describe 'Branches::Service' do
     end
 
     it 'should return valid command args' do
-      @output.should == ['git', "shell -c \"git-upload-pack 'test.git'\""]
+      @output.should == ['git', 'shell', '-c', "git-upload-pack 'test.git'"]
     end
 
     it 'should raise exception on invalid permissions' do

@@ -24,7 +24,7 @@ module Branches
           File.umask(0022)
 
           # load the configuration file
-          load opts[:config]
+          load opts[:config] unless opts[:noconfig]
 
           # move to processing
           args = process(opts[:user], command)
