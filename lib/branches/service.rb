@@ -30,8 +30,7 @@ module Branches
           args = process(opts[:user], command)
           
           # run it!
-          STDERR.puts "#{args.inspect}"
-          system(args)
+          system(*args)
         end
       end
 
@@ -43,7 +42,6 @@ module Branches
 
           # chomp the .git, non .git takes precedence
           path = path.chomp('.git')
-          STDERR.puts "path: #{path}"
 
           # determine access type
           access = :read if COMMANDS_READ.include?(command)
@@ -57,7 +55,7 @@ module Branches
           init_repository(path) unless File.directory?(path)
 
           # execute command
-          ['git', "shell -c \"#{command} '#{path}'\""]
+          ['git', 'shell', '-c', "#{command} '#{path}'"]
         end
       end
 
