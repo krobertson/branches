@@ -14,7 +14,7 @@ spec = Gem::Specification.new do |s|
   s.description  = 'Simplified, secure, private git repository serving'
   s.executables  = %w( branches )
   s.require_path = 'lib'
-  s.files        = %w( MIT-LICENSE README.textile Rakefile ) + Dir["{bin,lib}/**/*"]
+  s.files        = %w( LICENSE README.textile Rakefile ) + Dir["{bin,lib}/**/*"]
 
   s.add_dependency 'trollop'
 
