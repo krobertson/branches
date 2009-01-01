@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), '..', 'lib', 'setup')
+require File.join(File.dirname(__FILE__), '..', 'lib', 'branches_setup')
 require 'mocha'
 require 'tempfile'
 
@@ -28,6 +28,14 @@ describe 'Branches::Setup' do
     
     it 'should contain the admin key' do
       File.exist?(File.join(@path, 'keys', 'admin')).should == true
+    end
+  end
+
+  describe 'generate_authorized_keys' do
+    it 'should create the authorized_keys file' do
+      File.exist?(File.dirname(__FILE__), 'repos', '.ssh').should_not == true
+      
+      Branches::Setup.generate_authorized_keys(@path, @tmpkey.path)
     end
   end
 end

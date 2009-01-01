@@ -24,13 +24,4 @@ module Branches
       @write = []
     end
   end
-
-  class User
-    attr_accessor :name, :keyfile
-
-    def initialize(name, keyfile=nil)
-      @name = name
-      @keyfile = keyfile
-    end
-  end
 end

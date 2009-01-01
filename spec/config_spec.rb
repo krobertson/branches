@@ -4,9 +4,7 @@ describe 'Branches.config' do
   before(:all) do
 
     Branches.config do
-      user 'ken', 'keys/ken.pub'
-      user 'john', 'keys/john.pub'
-      user 'jane'
+      keydir 'keys'
 
       global do |g|
         g.write = 'ken'
@@ -25,18 +23,9 @@ describe 'Branches.config' do
     Branches.reset
   end
   
-  describe 'users' do
-    it 'should accept users' do
-      Branches.users.size.should == 3
-    end
-
-    it 'should have their key path' do
-      Branches.users['ken'].keyfile.should == 'keys/ken.pub'
-      Branches.users['john'].keyfile.should == 'keys/john.pub'
-    end
-
-    it 'should allow users with no keyfile given' do
-      Branches.users['jane'].keyfile.should == nil
+  describe 'keydir' do
+    it 'should accept the directory' do
+      Branches.keydir.should == 'keys'
     end
   end
 

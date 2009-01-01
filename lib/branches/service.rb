@@ -13,11 +13,7 @@ module Branches
           'git receive-pack',
           ]
 
-      def run
-        # get the user
-        user = ARGV[0]
-        raise 'Missing argument: USER' unless user
-
+      def run(opts)
         # get the ssh command
         command = ENV['SSH_ORIGINAL_COMMAND']
         raise 'Missing SSH_ORIGINAL_COMMAND environment variable' unless command
@@ -28,12 +24,13 @@ module Branches
           File.umask(0022)
 
           # load the configuration file
-          load 'branches.config'
+          load opts[:config]
 
           # move to processing
-          args = process(user, command)
+          args = process(opts[:user], command)
           
           # run it!
+          STDERR.puts "#{args.inspect}"
           system(args)
         end
       end
@@ -44,8 +41,9 @@ module Branches
           # get the command
           command, path = get_command(command)
 
-          # add .git suffix if not found
-          path += '.git' if path !~ /\.git$/
+          # chomp the .git, non .git takes precedence
+          path = path.chomp('.git')
+          STDERR.puts "path: #{path}"
 
           # determine access type
           access = :read if COMMANDS_READ.include?(command)
@@ -54,11 +52,12 @@ module Branches
           # check permissions
           raise 'Permission denied to the request repository' unless check_access(path, user, access)
 
-          # enure it exists
+          # enure it exists, without .git, then try it with .git, then create it with .git
+          path += '.git' unless File.directory?(path)
           init_repository(path) unless File.directory?(path)
 
           # execute command
-          ['git', 'shell', '-c', "#{command} '#{path}'"]
+          ['git', "shell -c \"#{command} '#{path}'\""]
         end
       end
 
@@ -94,9 +93,6 @@ module Branches
       def check_access(path, user, access)
         # if they have global access, grant it
         return true if Branches.global.send(access).include?(user)
-
-        # chomp the .git
-        path = path.chomp('.git')
 
         # get the repository and check its access level
         return Branches.repos[path].send(access).include?(user) if Branches.repos.has_key?(path)

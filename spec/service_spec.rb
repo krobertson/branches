@@ -25,23 +25,16 @@ describe 'Branches::Service' do
       ENV['SSH_ORIGINAL_COMMAND'] = 'git-upload-pack test.git'
     end
     
-    it 'should raise an error when no user given' do
-      lambda do
-        ARGV[0] = nil
-        Branches::Service.run
-      end.should raise_error('Missing argument: USER')
-    end
-
     it 'should raise an error when no command given' do
       lambda do
         ENV['SSH_ORIGINAL_COMMAND'] = nil
-        Branches::Service.run()
+        Branches::Service.run({})
       end.should raise_error('Missing SSH_ORIGINAL_COMMAND environment variable')
     end
 
     it 'should set umask' do
       # basically wait for it to error out reading the config
-      lambda { Branches::Service.run }.should raise_error(LoadError)
+      lambda { Branches::Service.run({:config => 'branches.config'}) }.should raise_error(LoadError)
       File.umask.should == 0022
     end
   end
@@ -60,7 +53,7 @@ describe 'Branches::Service' do
     end
 
     it 'should return valid command args' do
-      @output.should == ['git', 'shell', '-c', "git-upload-pack 'test.git'"]
+      @output.should == ['git', "shell -c \"git-upload-pack 'test.git'\""]
     end
 
     it 'should raise exception on invalid permissions' do
@@ -106,11 +99,6 @@ describe 'Branches::Service' do
     it 'should process specific repository permissions' do
       Branches::Service.check_access('test', 'jane', :write).should == true
       Branches::Service.check_access('test', 'john', :write).should == false
-    end
-
-    it 'should chop a .git off before checking' do
-      Branches::Service.check_access('test.git', 'jane', :write).should == true
-      Branches::Service.check_access('test.git', 'john', :write).should == false
     end
   end
 end

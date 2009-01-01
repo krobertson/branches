@@ -25,15 +25,22 @@
 require 'rubygems'
 require 'trollop'
 require 'branches'
+require 'branches_setup'
 
-begin
-  opts = Trollop::options do
-    version "branches"
-    opt :config, "The config path", :default => File.expand_path('~/branches-admin/config.rb')
-    opt :user, "The current user", :type => String, :required => true
-  end
+# Command line options
+opts = Trollop::options do
+  version "branches-setup"
+  opt :setup, "Create the base configuration"
+  opt :authorized_keys, "Generate the authorized_keys file"
+  opt :home, "The home path", :default => File.expand_path('~')
+  opt :config_path, "The config path", :default => File.expand_path('~/branches-admin')
+  opt :key, "The admin key", :default => ''
+end
 
-  Branches::Service.run(opts)
-rescue => e
-  STDERR.puts e
+if opts[:setup]
+  Branches::Setup.setup_config_repo(File.join(opts[:home], 'branches-admin'), opts[:key])
+end
+
+if opts[:authorized_keys]
+  Branches::Setup.generate_authorized_keys(opts[:home], opts[:config_path])
 end

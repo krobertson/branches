@@ -15,14 +15,10 @@ module Branches
     end
 
     def reset
-      @@users = {}
+      @@keydir = 'keys'
       @@repos = {}
       @@global = Global.new
       @@repository_path = '~'
-    end
-
-    def user(name, keyfile=nil)
-      @@users[name] = User.new(name, keyfile)
     end
 
     def global(&block)
@@ -41,8 +37,9 @@ module Branches
       @@repos
     end
 
-    def users
-      @@users
+    def keydir(path=nil)
+      @@keydir = path if path
+      @@keydir
     end
 
     def repository_path(value=nil)
