@@ -75,7 +75,7 @@ The init_repository method creates a bare repository when a user is attempting t
       class << self
         def init_repository(path)
           Repository.create(:name => path.capitalize, :path => path)
-
+          
           # create the repository
           FileUtils.mkdir_p(path, :mode => 0750)
           %x[git --git-dir=#{path} init]
