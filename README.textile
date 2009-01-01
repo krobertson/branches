@@ -18,41 +18,68 @@ Once Branches is installed, you'll want to create the system user that will be u
 
   sudo adduser \
     --system \
-	--gecos 'git' \
+    --gecos 'git' \
     --shell /bin/sh \
     --group \
     --disabled-password \
     --home /home/git \
     git
 
-And then 
+Next, will need to create the configuration repository with the first user's public key.  The first user will default as being 'admin'.  You will need to upload your public SSH key to the server beforehand.  Then run the following:
 
-To use the library, you'll need to build the project and drop the HopSharp.dll and the Newtonsoft.Json.dll in your site's bin directory.  To configure the library, you'll need to edit your web.config to include your API key for HopToad:
+  sudo -H -u git branches setup --key=mykey.pub
 
-<pre>  <appSettings>
-    <add key="Hoptoad:ApiKey" value="1234567890abcdefg"/>
-  </appSettings></pre>
+The command needs to be run as the git user we created earlier so that is permissions are all correct.  The -H command also updates its HOME environment variable so the files are created in the proper place.
 
-To programmatically report exceptions, all you need to do is ensure you've included the "HopSharp" namespace, and then call the SendToHoptoad method on the exception.  This is done using extension methods.  For example:
+Now you are set!  To begin customizing your configuration, you can pull the configuration repository using:
 
-<pre>  using HopSharp;
-  ...
-  try {
-	// some code
-  }
-  catch(Exception ex) {
-	// ohhnoes
-	ex.SendToHopToad();
-  }</pre>
+  git clone git@serverhost:branches-admin.git
 
-To use the HttpModule, you will just need to add it as an HttpHandler within your web.config:
+For configuration options, see the Configuration section.
 
-<pre>  <httpModules>
-    <add name="Hoptoad" type="HopSharp.NotifierHttpModule, HopSharp"/>
-  </httpModules></pre>
+To push a repository to the server, run the following within its directory:
 
-h2. TODO
+  git remote add branches git@serverhost:myapp.git
+  git push branches master
 
-There are some important things to do on the HttpModule still.  Most importantly, it will be incredibly verbose on its exception handling.  In .NET, a 404 is considered an exception, so it will catch, report, and subsequently notify you of any time someone tries to access a URL that doesn't exist.
+h2. Configuration
 
-To circumvent this, plan on adding the ability to set a series of patterns that you can use to exclude exceptions based on exception type, part of the message, or something along those lines.
+TODO
+
+h2. Overriding
+
+One of the design goals of Branches was to make it possible to override some core functionality to allow integration with external systems.  One usage scenario was for Branches to perform access checks with a database rather than using its configuration file.  The main functions that could be overridden are in Branches::Service and are check_access and init_repository.  Check access performs permission checks and init_repository creates new repositories.
+
+h3. check_access
+
+The check_access method verifies permissions.  Its 3 parameters are path, user, and access.  Path is the name/path of the repository being requested, e.g. 'branches'.  It doesn't have a .git suffix.  User is the name of the key being used, or if you custom generate the authorized_keys file, it could be a user ID of sorts.  Access is a symbol of either :read or :write for the type of accessing being requested.  The method just returns true or false depending on if access is allowed.
+
+  module Branches
+    module Service
+      class << self
+        def check_access(path, user, access)
+          user = User.find(user.to_i)
+          return false unless user
+          user.admin?
+        end
+      end
+    end
+  end
+
+h3. init_repository
+
+The init_repository method creates a bare repository when a user is attempting to push a repository that doesn't already exist.  This happens after permission checks.  All that is passed in is the name of the repository with the .git extension.  So the name will be 'branches.git'.  If the method is overridden, it will need to create the directory and initialize the git repository.  See the example below
+
+  module Branches
+    module Service
+      class << self
+        def init_repository(path)
+          Repository.create(:name => path.capitalize, :path => path)
+
+          # create the repository
+          FileUtils.mkdir_p(path, :mode => 0750)
+          %x[git --git-dir=#{path} init]
+        end
+      end
+    end
+  end
