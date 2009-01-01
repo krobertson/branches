@@ -1,19 +1,25 @@
 require File.join(File.dirname(__FILE__), '..', 'lib', 'setup')
 require 'mocha'
+require 'tempfile'
 
 describe 'Branches::Setup' do
   describe 'setup_config_repo' do
     before(:all) do
       @path = File.join(File.dirname(__FILE__), 'repos', 'branches-admin')
-      Branches::Setup.setup_config_repo(@path)
+      @tmpkey = Tempfile.new('admin_key')
+      @tmpkey.write 'test'
+      @tmpkey.close
+      Branches::Setup.setup_config_repo(@path, @tmpkey.path)
     end
 
     after(:all) do
       FileUtils.rm_rf(@path)
+      @tmpkey.unlink
     end
 
     it 'should create the given folder' do
-      Dir.exist?(@path).should == true
+      File.exist?(@path).should == true
+      File.directory?(@path).should == true
     end
     
     it 'should contain a configuration file' do
